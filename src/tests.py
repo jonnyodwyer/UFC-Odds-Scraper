@@ -1,5 +1,7 @@
 import unittest
-from src.scrape_event_links import EventScraper
+from unittest.mock import patch, Mock
+from scrape_event_links import EventScraper
+from scrape_event_fights_meta_data import EventFightsMetaDataScraper
 
 class TestEventScraper(unittest.TestCase):
     def test_scrape_event_links(self):
