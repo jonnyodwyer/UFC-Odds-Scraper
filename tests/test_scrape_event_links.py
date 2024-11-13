@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, Mock
-from scrape_event_links import EventScraper
+from src.scrape_event_links import EventScraper
 class TestEventScraper(unittest.TestCase):
     def test_scrape_event_links(self):
         scraper = EventScraper()

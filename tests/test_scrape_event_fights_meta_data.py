@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, Mock
-from scrape_event_fights_meta_data import EventFightsMetaDataScraper
+from src.scrape_event_fights_meta_data import EventFightsMetaDataScraper
 
 class TestEventFightsMetaDataScraper(unittest.TestCase):
     def test_parse_event_page(self):
