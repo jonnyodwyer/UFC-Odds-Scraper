@@ -30,7 +30,44 @@ class EventFightsMetaDataScraper:
         datetimestamp = int(soup.find('div', class_='hero-fixed-bar__description').contents[1].attrs['data-timestamp'])
         fight_date.append(datetime.datetime.fromtimestamp(datetimestamp).strftime('%Y-%m-%d'))
 
+        # Red and Blue fighters' names
+        red_fighters_result_set = soup.find_all('div', class_='c-listing-fight__corner-name--red')
+        blue_fighters_result_set = soup.find_all('div', class_='c-listing-fight__corner-name--blue')
+        red_fighters = self.extract_fighter_names(red_fighters_result_set)
+        blue_fighters = self.extract_fighter_names(blue_fighters_result_set)
+
+        # Title bouts
+
+
+        # Fight weights
+
+
+        # Red and Blue odds
+
+
         return fight_date, red_fighters, blue_fighters, title_bouts, fight_weights, red_odds, blue_odds
+
+        def extract_fighter_names(self, fighters_result_set):
+            fighter_names = []
+
+            for fighter in fighters_result_set:
+                # Check for given name and family name spans first
+                given_name_span = fighter.find('span', class_='c-listing-fight__corner-given-name')
+                family_name_span = fighter.find('span', class_='c-listing-fight__corner-family-name')
+                
+                if given_name_span and family_name_span:
+                    given_name = given_name_span.text.strip()
+                    family_name = family_name_span.text.strip()
+                    fighter_names.append(f'{given_name} {family_name}')
+                else:
+                    # Fallback to checking the anchor tag's text
+                    anchor_tag = fighter.find('a')
+                    if anchor_tag and anchor_tag.text.strip():
+                        fighter_names.append(anchor_tag.text.strip())
+                    else:
+                        fighter_names.append('Unknown Unknown')
+                        
+            return fighter_names
 
     def scrape_all_events(self):
         fight_dates = []
