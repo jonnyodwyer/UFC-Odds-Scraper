@@ -37,37 +37,59 @@ class EventFightsMetaDataScraper:
         blue_fighters = self.extract_fighter_names(blue_fighters_result_set)
 
         # Title bouts
+        weights_and_title_bouts_result_set = soup.find_all('div', class_='c-listing-fight__class-text')
+        # Title bouts are marked with the word "Title" in the text. There are two fighters in each bout, so only take odd numbered indices
+        weights_and_title_bouts_result_set = [weight_and_title.text.strip() for weight_and_title in weights_and_title_bouts_result_set[1::2]]
+        title_bouts = [True if 'Title' in weight_and_title else False for weight_and_title in weights_and_title_bouts_result_set]
 
-
-        # Fight weights
-
+        # Extract the fight weight strings from the text.
+        fight_weights = self.extract_fight_weights(weights_and_title_bouts_result_set)
 
         # Red and Blue odds
 
 
         return fight_date, red_fighters, blue_fighters, title_bouts, fight_weights, red_odds, blue_odds
 
-        def extract_fighter_names(self, fighters_result_set):
-            fighter_names = []
+    def extract_fighter_names(self, fighters_result_set):
+        fighter_names = []
 
-            for fighter in fighters_result_set:
-                # Check for given name and family name spans first
-                given_name_span = fighter.find('span', class_='c-listing-fight__corner-given-name')
-                family_name_span = fighter.find('span', class_='c-listing-fight__corner-family-name')
+        for fighter in fighters_result_set:
+            # Check for given name and family name spans first
+            given_name_span = fighter.find('span', class_='c-listing-fight__corner-given-name')
+            family_name_span = fighter.find('span', class_='c-listing-fight__corner-family-name')
                 
-                if given_name_span and family_name_span:
-                    given_name = given_name_span.text.strip()
-                    family_name = family_name_span.text.strip()
-                    fighter_names.append(f'{given_name} {family_name}')
+            if given_name_span and family_name_span:
+                given_name = given_name_span.text.strip()
+                family_name = family_name_span.text.strip()
+                fighter_names.append(f'{given_name} {family_name}')
+            else:
+                # Fallback to checking the anchor tag's text
+                anchor_tag = fighter.find('a')
+                if anchor_tag and anchor_tag.text.strip():
+                    fighter_names.append(anchor_tag.text.strip())
                 else:
-                    # Fallback to checking the anchor tag's text
-                    anchor_tag = fighter.find('a')
-                    if anchor_tag and anchor_tag.text.strip():
-                        fighter_names.append(anchor_tag.text.strip())
-                    else:
-                        fighter_names.append('Unknown Unknown')
+                    fighter_names.append('Unknown Unknown')
                         
-            return fighter_names
+        return fighter_names
+        
+    def extract_fight_weights(self, weights_and_title_bouts_result_set):
+        fight_weights = []
+        for weight_and_title in weights_and_title_bouts_result_set:
+            words = weight_and_title.split()
+            if "Women's" in words:
+                index = words.index("Women's")
+                if index + 1 < len(words):
+                    fight_weights.append(f"Women's {words[index + 1]}")
+            elif "Light" in words:
+                index = words.index("Light")
+                if index + 1 < len(words) and words[index + 1] == "Heavyweight":
+                    fight_weights.append("Light Heavyweight")
+                else:
+                    fight_weights.append("Light")
+            else:
+                # Take only the first word as the weight
+                fight_weights.append(words[0])
+        return fight_weights
 
     def scrape_all_events(self):
         fight_dates = []
@@ -98,5 +120,5 @@ class EventFightsMetaDataScraper:
                 writer.writerow(row)
 
 # Example usage:
-# scraper = EventFightsMetaDataScraper('event_urls.pickle')
+# scraper = EventFightsMetaDataScraper('urls.pickle')
 # scraper.scrape_all_events()

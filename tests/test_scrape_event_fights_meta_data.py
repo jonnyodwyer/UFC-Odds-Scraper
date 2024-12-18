@@ -14,6 +14,11 @@ class TestEventFightsMetaDataScraper(unittest.TestCase):
         self.assertEqual(blue_fighters, ['Alex Pereira', 'Zhang Weili', 'Michael Chandler', 'Chris Gutierrez', 'Claudio Puelles',
                                          'Renato Moicano', 'Ryan Spann', 'Molly McCann', 'Wellington Turman', 'Ottman Azaitar',
                                          'Silvana Gomez Juarez', 'Seungwoo Choi', 'Montel Jackson', 'Nicolae Negumereanu'])
+        self.assertEqual(title_bouts, [True, True, False, False, False, False, False, False, False, False, False, False, False, False])
+        self.assertEqual(fight_weights, ['Middleweight', "Women's Strawweight", 'Lightweight', 'Bantamweight', 'Lightweight', 'Lightweight',
+                                       'Light Heavyweight', "Women's Flyweight", 'Middleweight', 'Lightweight', "Women's Strawweight",
+                                       'Featherweight', 'Bantamweight', 'Light Heavyweight'])
+                            
 
 if __name__ == '__main__':
     unittest.main()
