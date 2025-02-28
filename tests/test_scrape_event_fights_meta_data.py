@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 from src.scrape_event_fights_meta_data import EventFightsMetaDataScraper
 
 class TestEventFightsMetaDataScraper(unittest.TestCase):
@@ -18,7 +18,8 @@ class TestEventFightsMetaDataScraper(unittest.TestCase):
         self.assertEqual(fight_weights, ['Middleweight', "Women's Strawweight", 'Lightweight', 'Bantamweight', 'Lightweight', 'Lightweight',
                                        'Light Heavyweight', "Women's Flyweight", 'Middleweight', 'Lightweight', "Women's Strawweight",
                                        'Featherweight', 'Bantamweight', 'Light Heavyweight'])
-                            
+        self.assertEqual(red_odds, ['-165', '-', '-175', '+175', '-155', '+105', '-215', '-380', '-205', '-145', '-115', '+135', '-', '-125'])
+        self.assertEqual(blue_odds, ['+140', '-', '+150', '-210', '+135', '-125', '+175', '+290', '+175', '+125', '-115', '-160', '-', '+105'])                     
 
 if __name__ == '__main__':
     unittest.main()

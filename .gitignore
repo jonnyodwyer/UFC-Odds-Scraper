@@ -1,4 +1,4 @@
 __pycache__
 urls.pickle
 dummy.pickle
-ufc_fights_meta_data.csv
+*.csv

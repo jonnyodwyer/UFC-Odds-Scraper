@@ -2,7 +2,7 @@ import pickle
 import requests
 from bs4 import BeautifulSoup
 import datetime
-import csv
+import pandas as pd
 
 class EventFightsMetaDataScraper:
     def __init__(self, pickle_file):
@@ -46,9 +46,21 @@ class EventFightsMetaDataScraper:
         fight_weights = self.extract_fight_weights(weights_and_title_bouts_result_set)
 
         # Red and Blue odds
+        odds_result_set = soup.find_all('span', class_='c-listing-fight__odds-amount')
+        red_odds = [odds.text.strip() for odds in odds_result_set[0::2]]
+        blue_odds = [odds.text.strip() for odds in odds_result_set[1::2]]
 
+        # Replicate fight date for each fight in the event
+        fight_date = fight_date * len(red_fighters)
 
-        return fight_date, red_fighters, blue_fighters, title_bouts, fight_weights, red_odds, blue_odds
+        # Make pandas data frame from the lists
+        df = pd.DataFrame(list(zip(fight_date, red_fighters, blue_fighters, title_bouts, fight_weights, red_odds, blue_odds)),
+                          columns =['Fight Date', 'Red Fighter', 'Blue Fighter', 'Title Bout', 'Fight Weight', 'Red Odds', 'Blue Odds'])
+        
+        # Only take complete rows from the data frame. Remove rows with odds = "-"
+        df = df[(df['Red Odds'] != '-') | (df['Blue Odds'] != '-')]
+
+        return df
 
     def extract_fighter_names(self, fighters_result_set):
         fighter_names = []
@@ -76,6 +88,10 @@ class EventFightsMetaDataScraper:
         fight_weights = []
         for weight_and_title in weights_and_title_bouts_result_set:
             words = weight_and_title.split()
+            if not words:
+                fight_weights.append('Unknown')
+                continue
+
             if "Women's" in words:
                 index = words.index("Women's")
                 if index + 1 < len(words):
@@ -84,40 +100,30 @@ class EventFightsMetaDataScraper:
                 index = words.index("Light")
                 if index + 1 < len(words) and words[index + 1] == "Heavyweight":
                     fight_weights.append("Light Heavyweight")
-                else:
-                    fight_weights.append("Light")
             else:
                 # Take only the first word as the weight
                 fight_weights.append(words[0])
         return fight_weights
 
     def scrape_all_events(self):
-        fight_dates = []
-        all_red_fighters = []
-        all_blue_fighters = []
-        all_title_bouts = []
-        all_fight_weights = []
-        all_red_odds = []
-        all_blue_odds = []
-
+        all_events_data = pd.DataFrame()
+        
         for url in self.urls:
-            fight_dates, red_fighters, blue_fighters, title_bouts, fight_weights, red_odds, blue_odds = self.parse_event_page(url)
-            fight_dates.extend(fight_dates)
-            all_red_fighters.extend(red_fighters)
-            all_blue_fighters.extend(blue_fighters)
-            all_title_bouts.extend(title_bouts)
-            all_fight_weights.extend(fight_weights)
-            all_red_odds.extend(red_odds)
-            all_blue_odds.extend(blue_odds)
+            try:
+                # Parse individual event page into a DataFrame
+                event_df = self.parse_event_page(url)
+                # Concatenate the event data into our overall DataFrame
+                all_events_data = pd.concat([all_events_data, event_df], ignore_index=True)
+            except Exception as e:
+                print(f"Error scraping {url}: {str(e)}")
+                continue
 
-        self.write_to_csv(fight_dates, all_red_fighters, all_blue_fighters, all_title_bouts, all_fight_weights, all_red_odds, all_blue_odds)
-
-    def write_to_csv(self, fight_dates, red_fighters, blue_fighters, title_bouts, fight_weights, red_odds, blue_odds):
-        with open('ufc_fights_meta_data.csv', 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['Fight Date', 'Red Fighter', 'Blue Fighter', 'Title Bout', 'Fight Weight', 'Red Odds', 'Blue Odds'])
-            for row in zip(fight_dates, red_fighters, blue_fighters, title_bouts, fight_weights, red_odds, blue_odds):
-                writer.writerow(row)
+        # Save aggregated data with a timestamped filename
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        output_file = f"ufc_fights_data_{timestamp}.csv"
+        all_events_data.to_csv(output_file, index=False)
+        
+        return all_events_data
 
 # Example usage:
 # scraper = EventFightsMetaDataScraper('urls.pickle')
